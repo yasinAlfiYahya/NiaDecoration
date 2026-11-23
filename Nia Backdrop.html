@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nia Backdrop</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={theme:{extend:{colors:{cream:'#FAF8F5',sage:'#8A9A7B',rose:'#C9A0A0',gold:'#B8963E',ink:'#2D2D2D'}}}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{background:#FAF8F5;color:#2D2D2D;font-family:Georgia,'Times New Roman',serif}.sans{font-family:system-ui,-apple-system,Segoe UI,sans-serif}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo}=React;
+const rp=n=>"Rp "+Math.round(n).toLocaleString("id-ID");
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function useLS(k,d){const[v,s]=useState(()=>ls.get(k,d));useEffect(()=>{ls.set(k,v)},[k,v]);
+useEffect(()=>{const f=e=>{if(e.key===k&&e.newValue)try{s(JSON.parse(e.newValue))}catch(x){}};window.addEventListener("storage",f);return()=>window.removeEventListener("storage",f)},[k]);return[v,s]}
+const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+const today=plus(0);
+const shift=(t,h)=>{const[a,b]=(t||"09:00").split(":").map(Number);return String(((a+h)%24+24)%24).padStart(2,"0")+":"+String(b).padStart(2,"0")};
+const ADMIN_WA="6281234567890";
+const COLORS=["Sage Green","Terracotta","White Gold","Dusty Pink"];
+const CATS={lamaran:"Backdrop Lamaran",akad:"Backdrop Akad/Resepsi",seserahan:"Seserahan",bundling:"Paket Bundling"};
+const PK=[
+{id:1,n:"Sage Garden Lamaran",cat:"lamaran",price:2500000,c:"Sage Green",d:"Backdrop 3m, bunga artificial premium, neon sign nama",e:"🌿"},
+{id:2,n:"Blush Arch Lamaran",cat:"lamaran",price:2900000,c:"Dusty Pink",d:"Arch floral, kain voile, karpet & 2 standing flower",e:"🌸"},
+{id:3,n:"Terracotta Boho Akad",cat:"akad",price:4500000,c:"Terracotta",d:"Backdrop akad 4m, pampas, rotan & meja akad",e:"🍂"},
+{id:4,n:"White Gold Grand Resepsi",cat:"akad",price:7500000,c:"White Gold",d:"Backdrop pelaminan 6m, bunga mix fresh, lighting",e:"✨"},
+{id:5,n:"Hias & Sewa Seserahan (per kotak)",cat:"seserahan",price:85000,c:"Dusty Pink",d:"Penataan isi seserahan + sewa kotak, harga per kotak",e:"🎁",per:1},
+{id:6,n:"Bundling Lamaran Lengkap",cat:"bundling",price:4200000,c:"Sage Green",d:"Backdrop lamaran + hias 5 kotak seserahan",e:"💐",boxes:5},
+{id:7,n:"Bundling Akad Premium",cat:"bundling",price:9800000,c:"White Gold",d:"Backdrop akad + hias 10 kotak seserahan",e:"💍",boxes:10}];
+const AREAS=[{n:"Dalam Kota (pusat)",f:0},{n:"Pinggiran Kota (≤10 km)",f:75000},{n:"Luar Kota (10–25 km)",f:150000},{n:"Luar Kabupaten (25–50 km)",f:300000}];
+const BOX={akrilik:{n:"Akrilik",dep:25000},kayu:{n:"Kayu Rustic",dep:20000},terrarium:{n:"Terrarium",dep:35000}};
+const ADD=[{id:"sign",n:"Welcome Sign",p:250000},{id:"tiffany",n:"Kursi Tiffany (10 pcs)",p:400000,use:{tiffany:10}},{id:"fresh",n:"Upgrade Bunga Fresh",p:750000},{id:"lampu",n:"Lampu Sorot",p:300000}];
+const KOTA=["Kota Jakarta Selatan","Kota Bandung","Kota Bekasi","Kota Bogor","Kota Depok","Kota Tangerang","Kota Semarang","Kota Yogyakarta","Kota Surakarta","Kota Surabaya","Kota Malang","Kota Medan","Kota Palembang","Kota Makassar","Kota Denpasar","Kab. Bogor","Kab. Bandung","Kab. Sleman","Kab. Bantul","Kab. Sidoarjo","Kab. Tangerang","Kab. Bekasi"];
+const STOCK0=[{id:"rangka",n:"Rangka Backdrop 3m",t:4},{id:"akrilik",n:"Kotak Akrilik",t:20},{id:"kayu",n:"Kotak Kayu Rustic",t:15},{id:"terrarium",n:"Kotak Terrarium",t:15},{id:"tiffany",n:"Kursi Tiffany",t:100}];
+const calc=({pkg,area,boxType,boxQty,addons})=>{const p=PK.find(x=>x.id===pkg);const bd=p.cat!=="seserahan",qty=p.cat==="seserahan"?boxQty:(p.boxes||0);
+const base=p.per?p.price*qty:p.price,add=ADD.filter(a=>addons.includes(a.id)).reduce((s,a)=>s+a.p,0),ongkir=AREAS[area].f,dep=qty?qty*BOX[boxType].dep:0;
+const total=base+add+ongkir+dep;const use={};if(bd)use.rangka=1;if(qty)use[boxType]=qty;if(addons.includes("tiffany"))use.tiffany=10;
+return{base,add,ongkir,dep,total,dp:Math.round((total-dep)*0.3),qty,use}};
+const stepsOf=o=>{const p=PK.find(x=>x.id===o.pkg),bd=p.cat!=="seserahan",bx=o.t.qty>0;
+return["Menunggu DP","DP Diterima (Tanggal Terkunci)",...(bx?["Barang Diterima Studio","Sedang Dihias","Preview Disetujui","Siap Diambil"]:[]),"Pelunasan Lunas",...(bd?["Pemasangan Backdrop"]:[]),bx?"Pembongkaran & Pengembalian Kotak":"Pembongkaran",bx?"Deposit Kembali / Selesai":"Selesai"]};
+const lunasIdx=o=>stepsOf(o).indexOf("Pelunasan Lunas");
+const mk=(id,i,s,extra)=>{const t=calc(i);return{id,...i,t,s,created:Date.now()-86400000,hold:Date.now()+86400000,ba:{isi:"",kondisi:""},...extra}};
+const seed=()=>[
+mk("ORD-2026001",{pkg:3,area:1,boxType:"kayu",boxQty:0,addons:["sign","tiffany"],color:"Terracotta"},3,{name:"Rina & Dimas",wa:"081234567801",date:plus(6),jam:"08:00",pic:"Bu Wati 0812-1111-2222",maps:"https://maps.google.com/?q=Bandung",addr:{alamat:"Jl. Melati No. 12 RT 03/RW 05",kel:"Cihapit",kec:"Bandung Wetan",kota:"Kota Bandung"}}),
+mk("ORD-2026002",{pkg:5,area:0,boxType:"akrilik",boxQty:8,addons:[],color:"Dusty Pink"},4,{name:"Sinta",wa:"081234567802",date:plus(3),jam:"10:00",pic:"Sinta 0813-2222-3333",maps:"",addr:{alamat:"Perum Griya Asri Blok C5",kel:"Bojong Rawalumbu",kec:"Rawalumbu",kota:"Kota Bekasi"},ba:{isi:"Seserahan: mukena, tas, sepatu, skincare, parfum, jam, perhiasan, snack",kondisi:""}}),
+mk("ORD-2026003",{pkg:7,area:2,boxType:"terrarium",boxQty:0,addons:["fresh","lampu"],color:"White Gold"},0,{name:"Putri & Andika",wa:"081234567803",date:plus(20),jam:"09:00",pic:"Pak Andi 0857-3333-4444",maps:"",addr:{alamat:"Jl. Raya Dramaga Km 4",kel:"Margajaya",kec:"Bogor Barat",kota:"Kota Bogor"}})];
+const inp="w-full border border-stone-300 rounded-lg px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sage sans";
+const gold="bg-gradient-to-r from-[#C5A253] to-[#B8963E] text-white rounded-full px-5 py-2.5 text-sm font-medium shadow sans disabled:opacity-40";
+const ghost="border border-stone-300 rounded-full px-4 py-2 text-sm sans bg-white";
+const Card=({children,c=""})=><div className={"bg-white rounded-2xl border border-stone-200 p-4 "+c}>{children}</div>;
+const L=({t,children})=><label className="block text-xs text-stone-500 mb-1 sans">{t}{children}</label>;
+const usedOn=(orders,date,ex)=>{const u={};orders.forEach(o=>{if(o.date===date&&o.id!==ex)Object.entries(o.t.use).forEach(([k,v])=>u[k]=(u[k]||0)+v)});return u};
+function Hold({until}){const[n,setN]=useState(Date.now());useEffect(()=>{const i=setInterval(()=>setN(Date.now()),1000);return()=>clearInterval(i)},[]);
+const r=Math.max(0,until-n),f=x=>String(x).padStart(2,"0");return<b>{f(Math.floor(r/3600000))}:{f(Math.floor(r/60000)%60)}:{f(Math.floor(r/1000)%60)}</b>}
+function Timeline({o}){const st=stepsOf(o);return<ol className="sans">{st.map((x,i)=><li key={i} className="flex gap-3 pb-4 relative">
+{i<st.length-1&&<span className={"absolute left-[11px] top-6 bottom-0 w-0.5 "+(i<o.s?"bg-sage":"bg-stone-200")}></span>}
+<span className={"w-6 h-6 rounded-full text-xs flex items-center justify-center shrink-0 z-10 "+(i<=o.s?"bg-sage text-white":"bg-stone-200 text-stone-500")}>{i<=o.s?"✓":i+1}</span>
+<span className={"text-sm pt-0.5 "+(i===o.s?"font-semibold text-ink":i<o.s?"text-stone-600":"text-stone-400")}>{x}</span></li>)}</ol>}
+
+function Catalog({pick}){const[cat,setCat]=useState("");const[col,setCol]=useState("");const[mx,setMx]=useState(10000000);
+const list=PK.filter(p=>(!cat||p.cat===cat)&&(!col||p.c===col)&&p.price<=mx);
+return<div><div className="text-center py-8"><p className="text-xs tracking-[.3em] text-gold sans">DEKORASI LAMARAN & PERNIKAHAN</p><h1 className="text-3xl mt-2">Wujudkan Hari Spesialmu</h1><p className="text-stone-500 text-sm mt-2 sans">Backdrop elegan & seserahan cantik untuk momen terindah.</p></div>
+<Card c="mb-4 grid sm:grid-cols-3 gap-3"><div><L t="Kategori"/><select className={inp} value={cat} onChange={e=>setCat(e.target.value)}><option value="">Semua</option>{Object.entries(CATS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
+<div><L t="Tema warna"/><select className={inp} value={col} onChange={e=>setCol(e.target.value)}><option value="">Semua</option>{COLORS.map(c=><option key={c}>{c}</option>)}</select></div>
+<div><L t={"Harga maks: "+rp(mx)}/><input type="range" min="100000" max="10000000" step="100000" value={mx} onChange={e=>setMx(+e.target.value)} className="w-full accent-[#B8963E]"/></div></Card>
+<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{list.map(p=><Card key={p.id} c="!p-0 overflow-hidden flex flex-col"><div className="h-36 flex items-center justify-center text-5xl" style={{background:{"Sage Green":"#DDE5D3",Terracotta:"#EBCDBB","White Gold":"#F3EBD3","Dusty Pink":"#F0D8D8"}[p.c]}}>{p.e}</div>
+<div className="p-4 flex-1 flex flex-col"><span className="text-[11px] text-sage sans">{CATS[p.cat]} • {p.c}</span><h3 className="text-lg leading-tight mt-1">{p.n}</h3><p className="text-xs text-stone-500 mt-1 sans flex-1">{p.d}</p>
+<div className="flex items-center justify-between mt-3"><b className="text-gold sans">{rp(p.price)}{p.per?"/kotak":""}</b><button className={gold} onClick={()=>pick(p)}>Pilih Paket</button></div></div></Card>)}
+{!list.length&&<p className="text-stone-500 sans">Tidak ada paket yang cocok dengan filter.</p>}</div></div>}
+
+function Booking({p,orders,stock,onDone,back}){
+const[f,setF]=useState({date:"",area:0,color:p.c,boxType:"akrilik",boxQty:5,addons:[],name:"",wa:"",jam:"09:00",pic:"",maps:"",alamat:"",kel:"",kec:"",kota:""});
+const set=(k,v)=>setF(x=>({...x,[k]:v}));
+const i={pkg:p.id,area:+f.area,boxType:f.boxType,boxQty:+f.boxQty||1,addons:f.addons,color:f.color};const t=calc(i);
+const used=f.date?usedOn(orders,f.date):{};const bad=f.date?Object.entries(t.use).filter(([k,v])=>(stock.find(s=>s.id===k)?.t||0)-(used[k]||0)<v).map(([k])=>stock.find(s=>s.id===k).n):[];
+const ok=f.date&&f.date>=today&&!bad.length&&f.name&&f.wa&&f.alamat&&f.kel&&f.kec&&f.kota&&f.jam&&f.pic;
+const submit=()=>{const n=orders.length+1;const id="ORD-2026"+String(n).padStart(3,"0");
+onDone({id,...i,t,s:0,created:Date.now(),hold:Date.now()+86400000,ba:{isi:"",kondisi:""},name:f.name,wa:f.wa,date:f.date,jam:f.jam,pic:f.pic,maps:f.maps,addr:{alamat:f.alamat,kel:f.kel,kec:f.kec,kota:f.kota}})};
+const T=({k,t,...r})=><div><L t={t}/><input className={inp} value={f[k]} onChange={e=>set(k,e.target.value)} {...r}/></div>;
+return<div className="py-6 space-y-4"><button className="text-sm text-sage sans" onClick={back}>← Kembali ke katalog</button>
+<Card><p className="text-xs text-sage sans">{CATS[p.cat]}</p><h2 className="text-2xl">{p.n}</h2></Card>
+<Card c="space-y-3"><h3 className="font-semibold">1. Tanggal, Area & Kustomisasi</h3><div className="grid sm:grid-cols-2 gap-3">
+<div><L t="Tanggal Acara"/><input type="date" min={today} className={inp} value={f.date} onChange={e=>set("date",e.target.value)}/></div>
+<div><L t="Kecamatan/Area (ongkir bongkar-pasang)"/><select className={inp} value={f.area} onChange={e=>set("area",e.target.value)}>{AREAS.map((a,x)=><option key={x} value={x}>{a.n} — {rp(a.f)}</option>)}</select></div>
+<div><L t="Tema warna bunga/kain"/><select className={inp} value={f.color} onChange={e=>set("color",e.target.value)}>{COLORS.map(c=><option key={c}>{c}</option>)}</select></div>
+{(p.cat==="seserahan"||p.cat==="bundling")&&<div><L t="Jenis kotak seserahan"/><select className={inp} value={f.boxType} onChange={e=>set("boxType",e.target.value)}>{Object.entries(BOX).map(([k,b])=><option key={k} value={k}>{b.n} (jaminan {rp(b.dep)}/kotak)</option>)}</select></div>}
+{p.cat==="seserahan"&&<div><L t="Jumlah kotak"/><input type="number" min="1" max="30" className={inp} value={f.boxQty} onChange={e=>set("boxQty",e.target.value)}/></div>}</div>
+<div><L t="Add-on"/><div className="grid sm:grid-cols-2 gap-2">{ADD.map(a=><label key={a.id} className="flex items-center gap-2 border rounded-lg p-2 text-sm sans bg-cream"><input type="checkbox" className="accent-[#8A9A7B]" checked={f.addons.includes(a.id)} onChange={e=>set("addons",e.target.checked?[...f.addons,a.id]:f.addons.filter(x=>x!==a.id))}/>{a.n} <span className="ml-auto text-stone-500">{rp(a.p)}</span></label>)}</div></div>
+{f.date&&(bad.length?<p className="text-sm bg-red-50 text-red-700 rounded-lg p-3 sans">❌ Stok tidak cukup pada tanggal ini: {bad.join(", ")}. Coba tanggal lain.</p>:<p className="text-sm bg-green-50 text-green-700 rounded-lg p-3 sans">✅ Tanggal tersedia!</p>)}</Card>
+<Card c="sans text-sm space-y-1"><h3 className="font-semibold font-serif mb-2">Rincian Biaya</h3>
+{[["Harga paket"+(t.qty&&p.per?` (${t.qty} kotak)`:""),t.base],["Add-on",t.add],["Ongkir bongkar-pasang",t.ongkir],["Uang jaminan kotak (dikembalikan)",t.dep]].map(([a,b])=><div key={a} className="flex justify-between"><span>{a}</span><span>{rp(b)}</span></div>)}
+<div className="flex justify-between font-semibold border-t pt-2"><span>Total</span><span>{rp(t.total)}</span></div>
+<div className="flex justify-between text-gold font-semibold"><span>DP 30% (bayar sekarang)</span><span>{rp(t.dp)}</span></div><p className="text-xs text-stone-400">DP dihitung dari total tanpa uang jaminan.</p></Card>
+<Card c="space-y-3"><h3 className="font-semibold">2. Detail Acara</h3><div className="grid sm:grid-cols-2 gap-3">
+{T({k:"name",t:"Nama Klien"})}{T({k:"wa",t:"Nomor WhatsApp",inputMode:"tel",placeholder:"08xxxxxxxxxx"})}{T({k:"jam",t:"Jam Acara",type:"time"})}{T({k:"pic",t:"Kontak PIC (nama & nomor)"})}</div>
+<div><L t="Alamat Lengkap (jalan, no., RT/RW, patokan)"/><textarea rows="2" className={inp} value={f.alamat} onChange={e=>set("alamat",e.target.value)}/></div>
+<div className="grid sm:grid-cols-3 gap-3">{T({k:"kel",t:"Kelurahan/Desa"})}{T({k:"kec",t:"Kecamatan"})}<div><L t="Kabupaten/Kota"/><input list="kota" className={inp} value={f.kota} onChange={e=>set("kota",e.target.value)} placeholder="Pilih / ketik"/><datalist id="kota">{KOTA.map(k=><option key={k} value={k}/>)}</datalist></div></div>
+{T({k:"maps",t:"Link Google Maps (opsional)"})}
+<button disabled={!ok} className={gold+" w-full"} onClick={submit}>Buat Pesanan & Invoice</button>{!ok&&<p className="text-xs text-stone-400 sans">Lengkapi semua data wajib & pilih tanggal yang tersedia.</p>}</Card></div>}
+
+function Invoice({o,setOrders,done}){const p=PK.find(x=>x.id===o.pkg);const paid=o.s>=1;
+const msg=`Halo Nia Backdrop, saya ${o.name}.%0APesanan ${o.id}%0APaket: ${p.n}%0ATanggal: ${o.date} ${o.jam}%0ALokasi: ${o.addr.kel}, ${o.addr.kec}, ${o.addr.kota}%0ATotal: ${rp(o.t.total)}%0ADP 30%: ${rp(o.t.dp)}`;
+return<div className="py-6 space-y-4 sans"><Card c="space-y-2"><div className="flex justify-between"><h2 className="text-2xl font-serif">Invoice</h2><b className="text-gold">{o.id}</b></div>
+<p className="text-sm">{p.n} • {o.color}</p><p className="text-sm text-stone-500">{o.date} pukul {o.jam}<br/>{o.addr.alamat}, Kel. {o.addr.kel}, Kec. {o.addr.kec}, {o.addr.kota}</p>
+<div className="border-t pt-2 text-sm"><div className="flex justify-between"><span>Total</span><b>{rp(o.t.total)}</b></div><div className="flex justify-between"><span>Termasuk jaminan kotak</span><span>{rp(o.t.dep)}</span></div><div className="flex justify-between text-gold font-semibold"><span>DP 30%</span><span>{rp(o.t.dp)}</span></div></div>
+{paid?<p className="bg-green-50 text-green-700 rounded-lg p-3 text-sm">✅ DP diterima. Tanggal Anda sudah terkunci.</p>:<p className="bg-amber-50 text-amber-800 rounded-lg p-3 text-sm">⏳ Bayar DP sebelum <Hold until={o.hold}/> atau tanggal dilepas.</p>}
+<div className="flex flex-wrap gap-2 pt-2">{!paid&&<button className={gold} onClick={()=>setOrders(a=>a.map(x=>x.id===o.id?{...x,s:1}:x))}>Konfirmasi Bayar DP (Simulasi)</button>}
+<a className={ghost} target="_blank" href={`https://wa.me/${ADMIN_WA}?text=${msg}`}>Kirim Invoice ke WhatsApp</a><button className={ghost} onClick={done}>Selesai</button></div>
+<p className="text-xs text-stone-400">Simpan nomor pesanan untuk melacak progres.</p></Card></div>}
+
+function Track({orders,init}){const[q,setQ]=useState(init||"");const o=orders.find(x=>x.id.toLowerCase()===q.trim().toLowerCase());
+return<div className="py-6 space-y-4"><h2 className="text-2xl">Lacak Pesanan</h2><input className={inp} placeholder="Contoh: ORD-2026001" value={q} onChange={e=>setQ(e.target.value)}/>
+{q&&!o&&<p className="text-sm text-stone-500 sans">Pesanan tidak ditemukan.</p>}{o&&<Card><p className="font-semibold">{o.name} <span className="text-xs text-stone-400 sans">• {o.id}</span></p><p className="text-xs text-stone-500 mb-4 sans">{PK.find(x=>x.id===o.pkg).n} • {o.date}</p><Timeline o={o}/></Card>}</div>}
+
+function Login({ok}){const[u,setU]=useState("");const[p,setP]=useState("");const[err,setErr]=useState(false);
+return<div className="max-w-sm mx-auto py-16"><Card c="space-y-3"><h2 className="text-2xl text-center">Login Admin</h2><p className="text-xs text-center text-stone-500 sans">Khusus pemilik & tim Nia Backdrop</p>
+<div><L t="Username"/><input className={inp} value={u} onChange={e=>setU(e.target.value)}/></div><div><L t="Password"/><input type="password" className={inp} value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==="Enter"&&document.getElementById("lg").click()}/></div>
+{err&&<p className="text-sm text-red-600 sans">Username atau password salah.</p>}
+<button id="lg" className={gold+" w-full"} onClick={()=>u==="admin"&&p==="nia123"?ok():setErr(true)}>Masuk</button><p className="text-[11px] text-stone-400 text-center sans">Demo: admin / nia123</p></Card></div>}
+
+function Admin({orders,setOrders,stock,setStock,out}){const[tab,setTab]=useState("ringkas");const[fs,setFs]=useState("");const[sel,setSel]=useState(null);const[sd,setSd]=useState(today);const[nw,setNw]=useState("");
+const ym=today.slice(0,7);const act=orders.filter(o=>o.s<stepsOf(o).length-1);
+const income=orders.reduce((s,o)=>s+(o.s>=1&&o.created&&new Date(o.created).toISOString().slice(0,7)===ym?Math.round((o.t.total-o.t.dep)*(o.s>=lunasIdx(o)?1:.3)):0),0);
+const held=orders.filter(o=>o.s>=1&&o.s<stepsOf(o).length-1).reduce((s,o)=>s+o.t.dep,0);
+const next=[...orders].filter(o=>o.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+const upd=(id,fn)=>setOrders(a=>a.map(o=>o.id===id?fn(o):o));const so=orders.find(o=>o.id===sel);
+const tabs=[["ringkas","Ringkasan"],["pesanan","Pesanan"],["stok","Stok"],["jadwal","Jadwal"]];
+const used=usedOn(orders,sd);
+return<div className="py-6 space-y-4"><div className="flex items-center gap-2 overflow-x-auto sans">{tabs.map(([k,v])=><button key={k} onClick={()=>setTab(k)} className={"px-4 py-2 rounded-full text-sm whitespace-nowrap "+(tab===k?"bg-sage text-white":"bg-white border")}>{v}</button>)}<button className="ml-auto text-sm text-stone-500 whitespace-nowrap" onClick={out}>Keluar</button></div>
+{tab==="ringkas"&&<div className="grid grid-cols-2 lg:grid-cols-4 gap-3">{[["Pesanan Aktif",act.length],["Pendapatan Bulan Ini",rp(income)],["Deposit Tertahan",rp(held)],["Acara Terdekat",next?next.date+" • "+next.name:"-"]].map(([a,b])=><Card key={a}><p className="text-xs text-stone-500 sans">{a}</p><p className="text-lg mt-1 break-words">{b}</p></Card>)}</div>}
+{tab==="pesanan"&&<Card c="space-y-3"><select className={inp} value={fs} onChange={e=>setFs(e.target.value)}><option value="">Semua status</option><option value="a">Aktif</option><option value="d">Selesai</option></select>
+<div className="overflow-x-auto"><table className="w-full text-sm sans min-w-[560px]"><thead><tr className="text-left text-stone-500"><th className="p-2">No.</th><th>Klien</th><th>Tanggal</th><th>Total</th><th>Status</th></tr></thead><tbody>
+{orders.filter(o=>!fs||(fs==="d")===(o.s===stepsOf(o).length-1)).map(o=><tr key={o.id} className="border-t cursor-pointer hover:bg-cream" onClick={()=>setSel(o.id)}><td className="p-2 text-gold">{o.id}</td><td>{o.name}</td><td>{o.date}</td><td>{rp(o.t.total)}</td><td>{stepsOf(o)[o.s]}</td></tr>)}</tbody></table></div></Card>}
+{tab==="stok"&&<Card c="space-y-3 sans"><div><L t="Cek sisa stok pada tanggal"/><input type="date" className={inp+" max-w-xs"} value={sd} onChange={e=>setSd(e.target.value)}/></div>
+{stock.map(s=><div key={s.id} className="flex items-center gap-2 text-sm border-t pt-2"><span className="flex-1">{s.n}</span><span className="text-stone-500 text-xs">tersedia {s.t-(used[s.id]||0)}</span><input type="number" min="0" className={inp+" !w-20"} value={s.t} onChange={e=>setStock(a=>a.map(x=>x.id===s.id?{...x,t:+e.target.value}:x))}/></div>)}
+<div className="flex gap-2 border-t pt-3"><input className={inp} placeholder="Properti baru" value={nw} onChange={e=>setNw(e.target.value)}/><button className={gold} onClick={()=>{if(nw.trim()){setStock(a=>[...a,{id:"x"+Date.now(),n:nw.trim(),t:1}]);setNw("")}}}>Tambah</button></div></Card>}
+{tab==="jadwal"&&<div className="space-y-3 sans">{[...orders].filter(o=>o.date>=today&&o.s>=1).sort((a,b)=>a.date.localeCompare(b.date)).map(o=><Card key={o.id}><p className="font-semibold">{o.date} • {o.name} <span className="text-xs text-gold">{o.id}</span></p>
+<p className="text-sm mt-1">🚚 Loading/pasang: <b>{shift(o.jam,-3)}</b> • Acara: {o.jam} • Bongkar: <b>{shift(o.jam,4)}</b></p><p className="text-sm text-stone-500">📍 {o.addr.alamat}, Kel. {o.addr.kel}, Kec. {o.addr.kec}, {o.addr.kota}</p><p className="text-sm text-stone-500">PIC: {o.pic}</p></Card>)}<p className="text-xs text-stone-400">Hanya pesanan dengan DP diterima.</p></div>}
+{so&&<div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={()=>setSel(null)}><div className="bg-cream w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl p-5 space-y-3 sans" onClick={e=>e.stopPropagation()}>
+<div className="flex justify-between"><h3 className="text-lg font-serif">{so.id} — {so.name}</h3><button onClick={()=>setSel(null)}>✕</button></div>
+<p className="text-sm text-stone-500">{PK.find(x=>x.id===so.pkg).n} • {so.date} {so.jam}<br/>WA {so.wa}<br/>{so.addr.alamat}, Kel. {so.addr.kel}, Kec. {so.addr.kec}, {so.addr.kota}<br/>Total {rp(so.t.total)} • DP {rp(so.t.dp)} • Jaminan {rp(so.t.dep)}</p>
+<div><L t="Status pesanan"/><select className={inp} value={so.s} onChange={e=>upd(so.id,o=>({...o,s:+e.target.value}))}>{stepsOf(so).map((s,i)=><option key={i} value={i}>{s}</option>)}</select></div>
+<div className="flex gap-2 flex-wrap"><button className={ghost} onClick={()=>upd(so.id,o=>({...o,s:Math.max(o.s,1)}))}>{so.s>=1?"✓ DP Lunas":"Tandai DP Lunas"}</button><button className={ghost} onClick={()=>upd(so.id,o=>({...o,s:Math.max(o.s,lunasIdx(o))}))}>{so.s>=lunasIdx(so)?"✓ Lunas":"Tandai Pelunasan Lunas"}</button></div>
+{so.t.qty>0&&<div className="border-t pt-3 space-y-2"><b className="text-sm">Berita Acara Seserahan</b><textarea rows="3" className={inp} placeholder="Daftar isi seserahan yang diterima dari klien…" value={so.ba.isi} onChange={e=>upd(so.id,o=>({...o,ba:{...o.ba,isi:e.target.value}}))}/>
+<select className={inp} value={so.ba.kondisi} onChange={e=>upd(so.id,o=>({...o,ba:{...o.ba,kondisi:e.target.value}}))}><option value="">Kondisi kotak saat kembali…</option><option>Lengkap</option><option>Ada Kerusakan</option></select>
+{so.ba.kondisi&&<p className="text-xs">{so.ba.kondisi==="Lengkap"?`Deposit ${rp(so.t.dep)} dikembalikan penuh.`:"Ada kerusakan: potong deposit sesuai kerusakan, lalu kembalikan sisanya."}</p>}</div>}
+<Timeline o={so}/></div></div>}</div>}
+
+function App(){const[orders,setOrders]=useLS("nb_orders",null);const[stock,setStock]=useLS("nb_stock",STOCK0);const[mode,setMode]=useState("cust");const[sub,setSub]=useState("katalog");const[pkg,setPkg]=useState(null);const[inv,setInv]=useState(null);
+const[auth,setAuth]=useState(()=>{try{return sessionStorage.getItem("nb_auth")==="1"}catch(e){return false}});
+useEffect(()=>{if(!orders)setOrders(seed())},[orders]);
+if(!orders)return null;
+const login=()=>{try{sessionStorage.setItem("nb_auth","1")}catch(e){}setAuth(true)};const logout=()=>{try{sessionStorage.removeItem("nb_auth")}catch(e){}setAuth(false)};
+const io=inv&&orders.find(o=>o.id===inv);
+return<div className="min-h-screen"><header className="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-stone-200"><div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
+<span className="text-xl text-ink">🌸 Nia <span className="text-gold">Backdrop</span></span>
+{mode==="cust"&&<nav className="flex gap-1 sans text-sm">{[["katalog","Katalog"],["lacak","Lacak"]].map(([k,v])=><button key={k} className={"px-3 py-1 rounded-full "+(sub===k&&!pkg&&!inv?"bg-sage/20":"")} onClick={()=>{setSub(k);setPkg(null);setInv(null)}}>{v}</button>)}</nav>}
+<div className="ml-auto flex rounded-full border border-stone-300 overflow-hidden text-xs sans bg-white">{[["cust","Pelanggan"],["admin","Admin"]].map(([k,v])=><button key={k} onClick={()=>setMode(k)} className={"px-3 py-1.5 "+(mode===k?"bg-gold text-white":"")}>{v}</button>)}</div></div></header>
+<main className="max-w-5xl mx-auto px-4 pb-16">
+{mode==="admin"?(auth?<Admin orders={orders} setOrders={setOrders} stock={stock} setStock={setStock} out={logout}/>:<Login ok={login}/>)
+:io?<Invoice o={io} setOrders={setOrders} done={()=>{setInv(null);setSub("lacak")}}/>
+:pkg?<Booking p={pkg} orders={orders} stock={stock} back={()=>setPkg(null)} onDone={o=>{setOrders(a=>[...a,o]);setInv(o.id);setPkg(null)}}/>
+:sub==="lacak"?<Track orders={orders}/>:<Catalog pick={setPkg}/>}</main>
+<footer className="text-center text-xs text-stone-400 pb-6 sans">© Nia Backdrop • Dekorasi Lamaran & Pernikahan</footer></div>}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script></body></html>
